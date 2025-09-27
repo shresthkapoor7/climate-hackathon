@@ -65,11 +65,12 @@ export default function Congrats() {
         <br />
         <br />
         <Link
-  href="/chat"
+  href="https://climate-week.streamlit.app/"
   className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors text-lg"
 >
   <span className="px-4">Chat Now</span>
 </Link>
+
 
 
       </div>
