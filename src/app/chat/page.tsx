@@ -123,7 +123,7 @@ export default function ChatPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Welcome to Climate Chat</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Ask me anything about climate change, sustainability, renewable energy, or environmental topics. I'm here to help!
+                  Ask me anything about climate change, sustainability, renewable energy, or environmental topics. I&apos;m here to help!
                 </p>
               </div>
             </div>
