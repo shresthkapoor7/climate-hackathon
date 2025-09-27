@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState({
@@ -13,6 +15,37 @@ export default function Home() {
     'hero-company': 'Company'
   });
 
+  const [borough, setBorough] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const boroughRef = useRef<HTMLDivElement>(null);
+  const [income, setIncome] = useState(50000);
+
+  const nycBoroughts = [
+    "Bronx",
+    "Brooklyn",
+    "Manhattan",
+    "Queens",
+    "Staten Island",
+  ];
+
+  const handleBoroughChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setBorough(value);
+    if (value.length > 0) {
+      const filteredSuggestions = nycBoroughts.filter((b) =>
+        b.toLowerCase().startsWith(value.toLowerCase())
+      );
+      setSuggestions(filteredSuggestions);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setBorough(suggestion);
+    setSuggestions([]);
+  };
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -20,6 +53,11 @@ export default function Home() {
     }
     setIsMobileMenuOpen(false); // Close mobile menu after navigation
     setOpenDropdown(null); // Close dropdowns after navigation
+  };
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    router.push('/congrats');
   };
 
   const toggleDropdown = (dropdownName: string) => {
@@ -43,8 +81,29 @@ export default function Home() {
     if (openDropdown) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
+    };
+
+    if (openDropdown) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [openDropdown]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (boroughRef.current && !boroughRef.current.contains(event.target as Node)) {
+        setSuggestions([]);
+      }
+    };
+
+    if (suggestions.length > 0) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [suggestions.length]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -58,25 +117,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-4">
-            <button onClick={() => scrollToSection('home')} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-900 hover:text-gray-700 hover:bg-gray-50 font-medium transition-colors">
-              Home
-            </button>
-            <button onClick={() => scrollToSection('how')} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors">
-              How
-            </button>
-            <button onClick={() => scrollToSection('docs')} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors">
-              Docs
-            </button>
-            <button onClick={() => scrollToSection('pricing')} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors">
-              Pricing
-            </button>
-            <button onClick={() => scrollToSection('manifesto')} className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors">
-              Manifesto
-            </button>
-          </div>
-
           <div className="flex items-center space-x-4">
             <Link
               href="/chat"
@@ -85,7 +125,7 @@ export default function Home() {
               Chat Now
             </Link>
             <button className="hidden md:block bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-              Start for Free
+              Check Eligibility
             </button>
 
             {/* Mobile menu button */}
@@ -108,21 +148,6 @@ export default function Home() {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 px-6 py-4">
             <div className="space-y-3">
-              <button onClick={() => scrollToSection('home')} className="block w-full text-left px-4 py-2 border border-gray-300 rounded-lg text-gray-900 hover:bg-gray-50 font-medium transition-colors">
-                Home
-              </button>
-              <button onClick={() => scrollToSection('how')} className="block w-full text-left px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition-colors">
-                How
-              </button>
-              <button onClick={() => scrollToSection('docs')} className="block w-full text-left px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition-colors">
-                Docs
-              </button>
-              <button onClick={() => scrollToSection('pricing')} className="block w-full text-left px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition-colors">
-                Pricing
-              </button>
-              <button onClick={() => scrollToSection('manifesto')} className="block w-full text-left px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 font-medium transition-colors">
-                Manifesto
-              </button>
               <div className="pt-3 border-t border-gray-200 space-y-3">
                 <a href="#" className="block w-full text-left px-4 py-2 text-gray-600 hover:text-gray-900 font-medium">
                   Join Discord
@@ -140,300 +165,192 @@ export default function Home() {
       <main id="home" className="max-w-4xl mx-auto px-6 py-20 text-center">
 
         {/* Main Heading */}
-        <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8 leading-tight">
+        <h1 className="text-5xl md:text-4xl font-bold text-gray-900 mb-8 leading-tight">
 
-          <br />
-          for agents.
+        Find Your Extreme Heat Relief
         </h1>
 
+        <h2 className="text-2xl text-gray-700 mb-8">Check Your Eligibility for NYC Assistance Programs</h2>
+
         <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-          Nia is a context-augmentation layer for agents, primarily designed for coding agents. It
-          provides them with an up-to-date knowledge base and improves their performance by 27%.
+          This initiative, proudly supported by NYSERDA, is dedicated to helping NYC residents effectively plan and prepare for the dangers of heatwaves. By inputting key criteria, you can quickly review your eligibility for a full range of cooling and energy incentive programs. These programs include state and federal funded initiatives like NYC EmPower+ and Cooling Assistance, as well as many other vital grants and rebates. A built-in chatbot is also available to help answer any additional questions you have related to your eligible incentives and next steps.
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <button className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors min-w-140">
-            Start for Free
+          <button
+            onClick={() => scrollToSection('how')}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors min-w-140"
+          >
+            Check Eligibility
           </button>
-          <button className="bg-gray-100 text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center gap-2">
-            Arlan installation
-            <span className="text-gray-500 text-sm">⌘ K</span>
-          </button>
-        </div>
-
-        {/* Dropdown Menus */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-16 max-w-4xl mx-auto">
-          {/* Products Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => toggleDropdown('hero-products')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors flex items-center justify-between"
-            >
-              <span>{selectedItems['hero-products']}</span>
-              <svg className={`w-4 h-4 text-gray-400 transition-transform ${openDropdown === 'hero-products' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {openDropdown === 'hero-products' && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="py-2">
-                  <button onClick={() => selectItem('hero-products', 'Climate Analytics')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Climate Analytics</button>
-                  <button onClick={() => selectItem('hero-products', 'Carbon Tracking')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Carbon Tracking</button>
-                  <button onClick={() => selectItem('hero-products', 'Sustainability Reports')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Sustainability Reports</button>
-                  <button onClick={() => selectItem('hero-products', 'Green Investments')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Green Investments</button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Solutions Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => toggleDropdown('hero-solutions')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors flex items-center justify-between"
-            >
-              <span>{selectedItems['hero-solutions']}</span>
-              <svg className={`w-4 h-4 text-gray-400 transition-transform ${openDropdown === 'hero-solutions' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {openDropdown === 'hero-solutions' && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="py-2">
-                  <button onClick={() => selectItem('hero-solutions', 'For Enterprises')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">For Enterprises</button>
-                  <button onClick={() => selectItem('hero-solutions', 'For Startups')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">For Startups</button>
-                  <button onClick={() => selectItem('hero-solutions', 'For Government')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">For Government</button>
-                  <button onClick={() => selectItem('hero-solutions', 'For NGOs')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">For NGOs</button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Resources Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => toggleDropdown('hero-resources')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors flex items-center justify-between"
-            >
-              <span>{selectedItems['hero-resources']}</span>
-              <svg className={`w-4 h-4 text-gray-400 transition-transform ${openDropdown === 'hero-resources' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {openDropdown === 'hero-resources' && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="py-2">
-                  <button onClick={() => selectItem('hero-resources', 'Documentation')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Documentation</button>
-                  <button onClick={() => selectItem('hero-resources', 'Blog')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Blog</button>
-                  <button onClick={() => selectItem('hero-resources', 'Research Papers')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Research Papers</button>
-                  <button onClick={() => selectItem('hero-resources', 'Case Studies')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Case Studies</button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Company Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => toggleDropdown('hero-company')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-colors flex items-center justify-between"
-            >
-              <span>{selectedItems['hero-company']}</span>
-              <svg className={`w-4 h-4 text-gray-400 transition-transform ${openDropdown === 'hero-company' ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {openDropdown === 'hero-company' && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                <div className="py-2">
-                  <button onClick={() => selectItem('hero-company', 'About Us')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">About Us</button>
-                  <button onClick={() => selectItem('hero-company', 'Our Team')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Our Team</button>
-                  <button onClick={() => selectItem('hero-company', 'Careers')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Careers</button>
-                  <button onClick={() => selectItem('hero-company', 'Contact')} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">Contact</button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Demo indicator */}
-        <div className="text-gray-400 text-sm mb-8">
-          ⌘ J to see the latest demo
+          <Link
+            href="/chat"
+            className="bg-gray-100 text-gray-900 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center gap-2"
+          >
+            Chat Now
+          </Link>
         </div>
       </main>
 
-
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
 
       {/* How Section */}
       <section id="how" className="max-w-6xl mx-auto px-6 py-20 bg-gray-50">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-6">How It Works</h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Nia seamlessly integrates with your existing workflow to provide real-time context and intelligence to your coding agents.
+            Answer a few simple questions to quickly check your eligibility for various cooling and energy incentive programs.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+        {/* Form */}
+        <div className="max-w-3xl mx-auto">
+          <form className="grid grid-cols-1" onSubmit={handleFormSubmit}>
+            {/* Question 1 */}
+            <div className="space-y-3 relative" ref={boroughRef}>
+              <label htmlFor="borough" className="block text-base font-medium text-gray-800 text-left">
+                1. What NYC borough do you live in?
+              </label>
+              <input
+                type="text"
+                name="borough"
+                id="borough"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="e.g., Brooklyn"
+                value={borough}
+                onChange={handleBoroughChange}
+                autoComplete="off"
+              />
+              {suggestions.length > 0 && (
+                <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg mt-1 shadow-lg">
+                  {suggestions.map((suggestion, index) => (
+                    <li
+                      key={index}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Connect</h3>
-            <p className="text-gray-600">Easily integrate Nia with your development environment and existing tools.</p>
-          </div>
+            <br />
 
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
+            {/* Question 2 */}
+            <div className="space-y-3 mt-8">
+              <label htmlFor="income" className="block text-base font-medium text-gray-800 text-left">
+                2. What is your household income? <span className="font-bold text-blue-600">${income.toLocaleString()}</span>
+              </label>
+              <input
+                type="range"
+                name="income"
+                id="income"
+                min="0"
+                max="200000"
+                step="1000"
+                value={income}
+                onChange={(e) => setIncome(Number(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Analyze</h3>
-            <p className="text-gray-600">Our AI analyzes your codebase and provides contextual insights to your agents.</p>
-          </div>
+            <br />
 
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-              </svg>
+
+            {/* Question 3 */}
+            <div className="space-y-3 mt-8">
+              <label htmlFor="residents" className="block text-base font-medium text-gray-800 text-left">
+                3. What is the number of residents in your household?
+              </label>
+              <input
+                type="number"
+                name="residents"
+                id="residents"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                placeholder="e.g., 3"
+              />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Optimize</h3>
-            <p className="text-gray-600">Watch your agent performance improve by 27% with enhanced context awareness.</p>
-          </div>
-        </div>
-      </section>
+            <br />
 
-      {/* Docs Section */}
-      <section id="docs" className="max-w-6xl mx-auto px-6 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">Documentation</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Everything you need to get started with Nia, from quick start guides to advanced configuration.
-          </p>
-        </div>
+            {/* Question 4 */}
+            <div className="space-y-3 mt-8">
+              <label htmlFor="rentOrOwn" className="block text-base font-medium text-gray-800 text-left">
+                4. Do you rent or own your home?
+              </label>
+              <select
+                id="rentOrOwn"
+                name="rentOrOwn"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option>Rent</option>
+                <option>Own</option>
+              </select>
+            </div>
+            <br />
 
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Quick Start</h3>
-            <p className="text-gray-600 mb-4">Get up and running with Nia in under 5 minutes.</p>
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Read more →</a>
-          </div>
+            {/* Question 5 */}
 
-          <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">API Reference</h3>
-            <p className="text-gray-600 mb-4">Complete documentation of all Nia APIs and endpoints.</p>
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Read more →</a>
-          </div>
+            {/* Question 6 */}
+            <div className="space-y-3 mt-8">
+              <label htmlFor="under6Over60" className="block text-base font-medium text-gray-800 text-left">
+                6. Are any members in your household under 6 or over 60?
+              </label>
+              <select
+                id="under6Over60"
+                name="under6Over60"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+            <br />
 
-          <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Integrations</h3>
-            <p className="text-gray-600 mb-4">Learn how to integrate Nia with popular development tools.</p>
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Read more →</a>
-          </div>
 
-          <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Best Practices</h3>
-            <p className="text-gray-600 mb-4">Tips and tricks to get the most out of Nia.</p>
-            <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">Read more →</a>
-          </div>
-        </div>
-      </section>
+            {/* Question 7 */}
+            <div className="space-y-3 mt-8">
+              <label htmlFor="medicalCondition" className="block text-base font-medium text-gray-800 text-left">
+                7. Do any members in your household have a medical condition that&apos;s worsened by heat?
+              </label>
+              <select
+                id="medicalCondition"
+                name="medicalCondition"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+            <br />
 
-      {/* Pricing Section */}
-      <section id="pricing" className="max-w-6xl mx-auto px-6 py-20 bg-gray-50">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">Pricing</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Choose the plan that works best for your team. Start free and scale as you grow.
-          </p>
-        </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Free</h3>
-            <div className="text-4xl font-bold text-gray-900 mb-6">$0<span className="text-lg text-gray-600">/month</span></div>
-            <ul className="text-gray-600 mb-8 space-y-3">
-              <li>✓ Up to 3 agents</li>
-              <li>✓ Basic context augmentation</li>
-              <li>✓ Community support</li>
-              <li>✓ 1GB storage</li>
-            </ul>
-            <button className="w-full bg-gray-100 text-gray-900 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
-              Get Started
+            {/* Question 8 */}
+            <div className="space-y-3 mt-8">
+              <label htmlFor="acUnit" className="block text-base font-medium text-gray-800 text-left">
+                8. Is your A/C unit not working or is it over 5 years old?
+              </label>
+              <select
+                id="acUnit"
+                name="acUnit"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              >
+                <option>Yes</option>
+                <option>No</option>
+              </select>
+            </div>
+
+            <br />
+            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+              Check Eligibility
             </button>
-          </div>
-
-          <div className="bg-white border-2 border-blue-600 rounded-lg p-8 text-center relative">
-            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-              Most Popular
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Pro</h3>
-            <div className="text-4xl font-bold text-gray-900 mb-6">$29<span className="text-lg text-gray-600">/month</span></div>
-            <ul className="text-gray-600 mb-8 space-y-3">
-              <li>✓ Unlimited agents</li>
-              <li>✓ Advanced context augmentation</li>
-              <li>✓ Priority support</li>
-              <li>✓ 100GB storage</li>
-              <li>✓ Advanced analytics</li>
-            </ul>
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-              Start Free Trial
-            </button>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Enterprise</h3>
-            <div className="text-4xl font-bold text-gray-900 mb-6">Custom</div>
-            <ul className="text-gray-600 mb-8 space-y-3">
-              <li>✓ Everything in Pro</li>
-              <li>✓ Custom integrations</li>
-              <li>✓ Dedicated support</li>
-              <li>✓ Unlimited storage</li>
-              <li>✓ SLA guarantee</li>
-            </ul>
-            <button className="w-full bg-gray-100 text-gray-900 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
-              Contact Sales
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Manifesto Section */}
-      <section id="manifesto" className="max-w-4xl mx-auto px-6 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Manifesto</h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            We believe in empowering developers with intelligent tools that enhance creativity and productivity.
-          </p>
-        </div>
-
-        <div className="prose prose-lg mx-auto text-gray-600">
-          <p className="text-lg leading-relaxed mb-6">
-            In a world where code complexity is ever-increasing, developers need more than just tools—they need
-            intelligent partners that understand context, anticipate needs, and amplify human creativity.
-          </p>
-
-          <p className="text-lg leading-relaxed mb-6">
-            Nia represents our commitment to this vision. We&apos;re not just building another development tool;
-            we&apos;re crafting an intelligent layer that makes every interaction between humans and code more
-            meaningful, more productive, and more enjoyable.
-          </p>
-
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-6 my-8">
-            <p className="text-lg font-medium text-blue-900 mb-2">
-              &ldquo;The best tools are invisible—they amplify human capability without getting in the way.&rdquo;
-            </p>
-            <p className="text-blue-700">— Nia Team</p>
-          </div>
-
-          <p className="text-lg leading-relaxed">
-            Join us in reimagining what&apos;s possible when human intuition meets artificial intelligence in
-            the realm of software development.
-          </p>
+          </form>
         </div>
       </section>
     </div>
