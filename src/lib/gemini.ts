@@ -29,7 +29,7 @@ export async function generateClimateContent(prompt: string) {
 }
 
 // Generate climate analytics insights
-export async function generateClimateAnalytics(data: any) {
+export async function generateClimateAnalytics(data: Record<string, unknown>) {
   try {
     const model = getGeminiModel();
     const prompt = `As a climate analytics expert, analyze this data and provide insights: ${JSON.stringify(data)}.

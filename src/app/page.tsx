@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import styles from "./page.module.css";
 import Link from 'next/link';
 
 export default function Home() {
@@ -143,7 +141,7 @@ export default function Home() {
 
         {/* Main Heading */}
         <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-8 leading-tight">
-          Context augmentation
+
           <br />
           for agents.
         </h1>
@@ -420,20 +418,20 @@ export default function Home() {
           </p>
 
           <p className="text-lg leading-relaxed mb-6">
-            Nia represents our commitment to this vision. We're not just building another development tool;
-            we're crafting an intelligent layer that makes every interaction between humans and code more
+            Nia represents our commitment to this vision. We&apos;re not just building another development tool;
+            we&apos;re crafting an intelligent layer that makes every interaction between humans and code more
             meaningful, more productive, and more enjoyable.
           </p>
 
           <div className="bg-blue-50 border-l-4 border-blue-400 p-6 my-8">
             <p className="text-lg font-medium text-blue-900 mb-2">
-              "The best tools are invisible—they amplify human capability without getting in the way."
+              &ldquo;The best tools are invisible—they amplify human capability without getting in the way.&rdquo;
             </p>
             <p className="text-blue-700">— Nia Team</p>
           </div>
 
           <p className="text-lg leading-relaxed">
-            Join us in reimagining what's possible when human intuition meets artificial intelligence in
+            Join us in reimagining what&apos;s possible when human intuition meets artificial intelligence in
             the realm of software development.
           </p>
         </div>
